@@ -5,7 +5,7 @@
 const int VERSION_MAJOR = 4;
 const int VERSION_MINOR = 1;
 const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_HEIGHT = 800;
 const char* WINDOW_TITLE = "OpenGL on macOS";
 
 const char* VERTEX_SHADER_SOURCE = R"(
@@ -84,17 +84,28 @@ int main(void) {
 
     // Set up vertex data and buffers
     GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
+        -0.5f,      -0.5f * float(sqrt(3)) / 3,     0.0f,
+         0.5f,      -0.5f * float(sqrt(3)) / 3,     0.0f,
+         0.0f,       0.5f * float(sqrt(3)) * 2/ 3,  0.0f,
+        -0.5f / 2,   0.5f * float(sqrt(3)) / 6,     0.0f,
+         0.5f / 2,   0.5f * float(sqrt(3)) / 6,     0.0f,
+         0.0f,      -0.5f * float(sqrt(3)) / 3,     0.0f,
+    };
+
+    GLuint indices[] = { 
+        0, 3, 5,
+        3, 4, 2,
+        5, 4, 1,
     };
 
 
-    GLuint VAO, VBO;
+    GLuint VAO, VBO, EBO;
     // Generate and bind vertex array object
     glGenVertexArrays(1, &VAO);
     // Generate and bind vertex buffer object
     glGenBuffers(1, &VBO);
+    // Generate and bind element buffer object
+    glGenBuffers(1, &EBO);
 
     // Bind the Vertex Array Object first
     glBindVertexArray(VAO);
@@ -102,7 +113,11 @@ int main(void) {
     // Bind and set vertex buffer(s)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    
+
+    // Bind and set element buffer(s)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     // Define vertex attribute(s)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
@@ -110,6 +125,7 @@ int main(void) {
     // Unbind VBO and VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -122,7 +138,7 @@ int main(void) {
         // Draw the triangle
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
         glUseProgram(0);
 
@@ -135,6 +151,7 @@ int main(void) {
     // Clean up
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
 
     // Destroy window and terminate GLFW
